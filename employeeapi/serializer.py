@@ -19,3 +19,34 @@ class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model=Teams
         fields="__all__"
+        
+
+class ProjectAssignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Project_assign
+        fields="__all__"
+        
+        
+class ProjectDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ProjectDetail
+        fields="__all__"
+        
+
+class TaskChartSerializer(serializers.ModelSerializer):
+    project_detail=serializers.CharField(read_only=True)
+    assigned_person=serializers.CharField(read_only=True)
+    start_date=serializers.CharField(read_only=True)
+    end_date=serializers.CharField(read_only=True)
+    days_left=serializers.CharField(read_only=True)
+    class Meta:
+        model=TaskChart
+        fields="__all__"
+        
+class TaskUpdateChartSerializer(serializers.ModelSerializer):
+    task=serializers.CharField(read_only=True)
+    updated_by=serializers.CharField(read_only=True)    
+    date_updated=serializers.CharField(read_only=True)
+    class Meta:
+        model=TaskUpdateChart
+        fields="__all__"

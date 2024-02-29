@@ -91,7 +91,7 @@ class ProjectDetail(models.Model):
 
 class TaskChart(models.Model):
     project_detail=models.ForeignKey(ProjectDetail,on_delete=models.CASCADE) 
-    assigned_person=models.ForeignKey(Employee,on_delete=models.CASCADE)
+    assigned_person=models.OneToOneField(Employee,on_delete=models.CASCADE)
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField()
     days_left=models.IntegerField()

@@ -1,7 +1,13 @@
 from django.urls import path
 from employeeapi import views
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.routers import DefaultRouter
 
+router=DefaultRouter()
+
+router.register("projectdetail",views.ProjectDetailView,basename="projectdetail")
+router.register("assignedprojects",views.AssignedProjectsView,basename="assignedprojects-list")
+router.register("taskchart",views.TaskChartView,basename="taskchart")
 
 urlpatterns = [
     path("register/",views.EmployeeCreateView.as_view(),name="signup"),
@@ -9,4 +15,4 @@ urlpatterns = [
     path("teamview/",views.TeamView.as_view(),name="teamview"),
     
     
-]
+] +router.urls

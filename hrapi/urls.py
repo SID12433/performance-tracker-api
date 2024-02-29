@@ -1,0 +1,22 @@
+from django.urls import path
+from hrapi import views
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.routers import DefaultRouter
+
+router=DefaultRouter()
+router.register("employee",views.EmployeesView,basename="employee")
+router.register("teamlead",views.TeamleadView,basename="teamlead")
+router.register("teams",views.TeamsView,basename="teams")
+router.register("projects",views.ProjectView,basename="project-add")
+router.register("assignedprojects",views.ProjectAssignView,basename="assignedprojects")
+router.register("projectdetail",views.ProjectDetailView,basename="projectdetail")
+router.register("taskchart",views.TaskChartView,basename="taskchart")
+router.register("taskupdates",views.TaskUpdatesChartView,basename="taskupdates")
+
+
+
+urlpatterns = [
+    path("register/",views.HrCreateView.as_view(),name="signup"),
+    path("token/",ObtainAuthToken.as_view(),name="token"),
+    path("performancetrack/",views.PerformanceTrackView.as_view(),name="performancetrack")
+] +router.urls

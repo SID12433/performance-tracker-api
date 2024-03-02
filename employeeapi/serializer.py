@@ -38,7 +38,7 @@ class TaskChartSerializer(serializers.ModelSerializer):
     assigned_person=serializers.CharField(read_only=True)
     start_date=serializers.CharField(read_only=True)
     end_date=serializers.CharField(read_only=True)
-    days_left=serializers.CharField(read_only=True)
+    total_days=serializers.CharField(read_only=True)
     class Meta:
         model=TaskChart
         fields="__all__"

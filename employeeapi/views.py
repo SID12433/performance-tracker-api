@@ -83,8 +83,8 @@ class ProjectDetailView(ViewSet):
         if serializer.is_valid():
             start_date = datetime.now().date()
             ending_date = projectdetail_obj.projectassigned.project.end_date
-            day_left = (ending_date - start_date).days if ending_date else None
-            serializer.save(assigned_person=emp_obj,project_detail=projectdetail_obj,days_left=day_left,end_date=ending_date,)
+            total_days = (ending_date - start_date).days if ending_date else None
+            serializer.save(assigned_person=emp_obj,project_detail=projectdetail_obj,total_days=total_days,end_date=ending_date,)
             return Response(data=serializer.data)
         else:
             return Response(data=serializer.errors)
@@ -118,7 +118,14 @@ class TaskChartView(ViewSet):
             return Response(data=serializer.errors)    
 
     
+class TaskUpdatesView(ViewSet):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
     
-    
+    def list(self,request,*args,**kwargs):
+        emp_id=request.user.id
+        qs=TaskUpdateChart.objects.filter(updated_by=emp_id)
+        serializer=TaskUpdateChartSerializer(qs,many=True)
+        return Response(data=serializer.data)   
     
     

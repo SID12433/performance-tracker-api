@@ -94,7 +94,7 @@ class TaskChart(models.Model):
     assigned_person=models.OneToOneField(Employee,on_delete=models.CASCADE)
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField()
-    days_left=models.IntegerField()
+    total_days=models.IntegerField()
     
     
 class TaskUpdateChart(models.Model):
@@ -103,19 +103,14 @@ class TaskUpdateChart(models.Model):
     updated_by=models.ForeignKey(Employee, on_delete=models.CASCADE)
     description=models.CharField(max_length=100)
     performance_level=models.PositiveIntegerField(validators=[MinValueValidator(1),MaxValueValidator(3)])
-    date_updated=models.DateTimeField(auto_now_add=True)    
+    date_updated=models.DateTimeField(auto_now_add=True) 
     
     
 class Performance_assign(models.Model):
     hr=models.ForeignKey(Hr,on_delete=models.CASCADE)
     employee=models.ForeignKey(Employee,on_delete=models.CASCADE)
     performance=models.FloatField()
-    options=[
-        ("Perfect","Perfect"),
-        ("Average","Average"),
-        ("Bad","Bad"),
-    ]
-    comment=models.CharField(max_length=50,choices=options)
+
     
     
 

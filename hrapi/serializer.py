@@ -63,6 +63,7 @@ class TaskUpdatesChartSerializer(serializers.ModelSerializer):
     
 class PerformanceTrackSerializer(serializers.ModelSerializer):
     hr=serializers.CharField(read_only=True)
+    performance=serializers.CharField(read_only=True)
     class Meta:
         model=Performance_assign
         fields="__all__"

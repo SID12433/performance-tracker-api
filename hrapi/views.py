@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet,ViewSet
 from rest_framework import status
 from rest_framework.decorators import action
+from django.db.models import Count, Sum, F, ExpressionWrapper, FloatField
 
 
 from hrapi.models import Hr,Teams,TeamLead,TaskUpdateChart,TaskChart,Employee,Projects,ProjectDetail,Project_assign,Performance_assign
@@ -195,20 +196,54 @@ class PerformanceTrackView(APIView):
     authentication_classes=[authentication.TokenAuthentication]
     permission_classes=[permissions.IsAuthenticated]
     
-    def post(self,request,*args,**kwargs):
-        serializer=PerformanceTrackSerializer(data=request.data)
-        hr_id=request.user.id
-        hr_obj=Hr.objects.get(id=hr_id)
+    def post(self, request, *args, **kwargs):
+        serializer = PerformanceTrackSerializer(data=request.data)
+        hr_id = request.user.id
+        hr_obj = Hr.objects.get(id=hr_id)
+        employee_id = request.data.get('employee')  
+        employee = Employee.objects.get(id=employee_id)
+        
+        task_count = TaskUpdateChart.objects.filter(updated_by=employee).count()
+        
+        total_days_spent = TaskUpdateChart.objects.filter(updated_by=employee).aggregate(
+            total_days_spent=Sum('task__total_days')
+        )['total_days_spent'] or 0
+        
+        total_days_assigned = TaskChart.objects.filter(assigned_person=employee).aggregate(
+            total_days_assigned=Sum('total_days')
+        )['total_days_assigned'] or 0
+        
+        if total_days_assigned > 0:
+            tasks_percentage = min((task_count / total_days_assigned) * 100, 100)
+        else:
+            tasks_percentage = 0
+        
+        if total_days_assigned > 0:
+            days_percentage = min((total_days_spent / total_days_assigned) * 100, 100)  
+        else:
+            days_percentage = 0
+        
+        overall_performance = min((tasks_percentage + days_percentage) / 2, 100)
+        
         if serializer.is_valid():
-            serializer.save(hr=hr_obj)
+            serializer.save(
+                hr=hr_obj,
+                employee=employee,
+                performance=overall_performance
+            )
             return Response(data=serializer.data)
         else:
             return Response(data=serializer.errors)
+        
+        
+class PerformancelistView():
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
     
-    
-    
-
-    
+    def list(self,request,*args,**kwargs):
+        qs=TaskUpdateChart.objects.all()
+        serializer=TaskUpdatesChartSerializer(qs,many=True)
+        return Response(data=serializer.data)
     
     
 

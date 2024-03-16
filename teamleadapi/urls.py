@@ -17,6 +17,6 @@ router.register("taskupdates",views.TaskUpdatesChartView,basename="taskupdates")
 
 urlpatterns = [
     path("register/",views.TeamleadCreateView.as_view(),name="signup"),
-    path("token/",ObtainAuthToken.as_view(),name="token"),
+    path('token/',views.CustomAuthToken.as_view(), name='token'),
 
 ]  +router.urls

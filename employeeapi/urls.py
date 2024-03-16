@@ -12,7 +12,7 @@ router.register("taskupdateschart",views.TaskUpdatesView,basename="taskupdatesch
 
 urlpatterns = [
     path("register/",views.EmployeeCreateView.as_view(),name="signup"),
-    path("token/",ObtainAuthToken.as_view(),name="token"),
+    path('token/',views.CustomAuthToken.as_view(), name='token'),
     path("teamview/",views.TeamView.as_view(),name="teamview"),
     
     

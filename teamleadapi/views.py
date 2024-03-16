@@ -7,6 +7,9 @@ from rest_framework.viewsets import ModelViewSet,ViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
 
 from hrapi.models import Hr,Teams,TeamLead,TaskUpdateChart,TaskChart,Employee,Projects,ProjectDetail,Project_assign,Performance_assign
 from teamleadapi.serializer import RegistrationSerializer,ProjectSerializer,TeamSerializer,EmployeeSerializer,ProjectAssignSerializer,ProjectDetailSerializer,TaskChartSerializer,TaskUpdatesChartSerializer
@@ -20,6 +23,21 @@ class TeamleadCreateView(APIView):
             return Response(data=serializer.data)
         else:
             return Response(data=serializer.errors)
+ 
+ 
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        user_type = user.user_type
+        
+        return Response({
+            'token': token.key,
+            'user_type': user_type,
+        }) 
+ 
         
     
 class EmployeesView(ViewSet):

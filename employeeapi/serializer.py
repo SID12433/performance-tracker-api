@@ -12,22 +12,40 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Employee.objects.create_user(**validated_data)
-    
+
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Employee
+        fields="__all__"
+
+   
     
 class TeamSerializer(serializers.ModelSerializer):
     teamlead=serializers.CharField(read_only=True)
+    members=serializers.SerializerMethodField()
+
+    def get_members(self, obj):
+        return [member.employee.Firstname for member in obj.members.all()]    
+
     class Meta:
         model=Teams
         fields="__all__"
         
 
 class ProjectAssignSerializer(serializers.ModelSerializer):
+    teamlead=serializers.CharField(source='teamlead.name', read_only=True)
+    project=serializers.CharField(source='project.topic', read_only=True)
+    team=serializers.CharField(source='team.name', read_only=True)
     class Meta:
         model=Project_assign
         fields="__all__"
         
         
 class ProjectDetailSerializer(serializers.ModelSerializer):
+    projectassigned=serializers.CharField(source='projectassigned.topic', read_only=True)
+    teamlead=serializers.CharField(source='teamlead.name', read_only=True)
+    assigned_person=serializers.CharField(source='assigned_person.Firstname', read_only=True)
     class Meta:
         model=ProjectDetail
         fields="__all__"

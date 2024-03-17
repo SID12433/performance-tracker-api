@@ -36,9 +36,28 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         model=ProjectDetail
         fields="__all__"
         
+class ProjectDetailViewSerializer(serializers.ModelSerializer):
+    projectassigned=serializers.CharField(read_only=True)
+    teamlead=serializers.CharField(read_only=True)
+    assigned_person=serializers.CharField(source='assigned_person.Firstname', read_only=True)
+    class Meta:
+        model=ProjectDetail
+        fields="__all__"
+        
         
 class TeamSerializer(serializers.ModelSerializer):
     teamlead=serializers.CharField(read_only=True)
+    class Meta:
+        model=Teams
+        fields="__all__"
+        
+class TeamsViewSerializer(serializers.ModelSerializer):
+    teamlead=serializers.CharField(read_only=True)
+    members=serializers.SerializerMethodField()
+
+    def get_members(self, obj):
+        return [member.employee.Firstname for member in obj.members.all()]
+    
     class Meta:
         model=Teams
         fields="__all__"
@@ -51,6 +70,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
         
         
 class TaskChartSerializer(serializers.ModelSerializer):
+    project_detail=ProjectDetailSerializer()
+    assigned_person=serializers.CharField(source='assigned_person.Firstname', read_only=True)
+    project_name=serializers.CharField(source='project_detail.projectassigned.project', read_only=True)  #new field for project name
     class Meta:
         model=TaskChart
         fields="__all__"

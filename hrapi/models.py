@@ -108,7 +108,7 @@ class TaskUpdateChart(models.Model):
     
 class Performance_assign(models.Model):
     hr=models.ForeignKey(Hr,on_delete=models.CASCADE)
-    employee=models.ForeignKey(Employee,on_delete=models.CASCADE)
+    employee=models.OneToOneField(Employee,on_delete=models.CASCADE,unique=True)
     performance=models.FloatField()
 
     

@@ -12,7 +12,7 @@ from rest_framework.authtoken.models import Token
 
 
 from hrapi.models import Hr,Teams,TeamLead,TaskUpdateChart,TaskChart,Employee,Projects,ProjectDetail,Project_assign,Performance_assign
-from teamleadapi.serializer import RegistrationSerializer,ProjectSerializer,TeamSerializer,EmployeeSerializer,ProjectAssignSerializer,ProjectDetailSerializer,TaskChartSerializer,TaskUpdatesChartSerializer
+from teamleadapi.serializer import RegistrationSerializer,ProjectSerializer,TeamSerializer,EmployeeSerializer,ProjectAssignSerializer,ProjectDetailSerializer,TaskChartSerializer,TaskUpdatesChartSerializer,TeamsViewSerializer,ProjectDetailViewSerializer
 
 
 class TeamleadCreateView(APIView):
@@ -88,13 +88,13 @@ class TeamView(ViewSet):
             team = Teams.objects.get(teamlead=teamlead_obj)
         except Teams.DoesNotExist:
             return Response(data={"message": "Team not found for this team lead."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = TeamSerializer(team)
+        serializer = TeamsViewSerializer(team)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
     def retrieve(self,request,*args,**kwargs):
         id=kwargs.get("pk")
         qs=Teams.objects.get(id=id)
-        serializer=TeamSerializer(qs)
+        serializer=TeamsViewSerializer(qs)
         return Response(data=serializer.data)
     
     
@@ -182,13 +182,13 @@ class ProjectDetailView(ViewSet):
     def list(self,request,*args,**kwargs):
         teamlead_id=request.user.id
         qs=ProjectDetail.objects.filter(teamlead=teamlead_id)
-        serializer=ProjectDetailSerializer(qs,many=True)
+        serializer=ProjectDetailViewSerializer(qs,many=True)
         return Response(data=serializer.data)
     
     def retrieve(self,request,*args,**kwargs):
         id=kwargs.get("pk")
         qs=ProjectDetail.objects.get(id=id)
-        serializer=ProjectDetailSerializer(qs)
+        serializer=ProjectDetailViewSerializer(qs)
         return Response(data=serializer.data)
     
 
@@ -202,27 +202,34 @@ class TaskChartView(ViewSet):
         serializer = TaskChartSerializer(qs, many=True)
         return Response(serializer.data)
     
-    def retrieve(self,request,*args,**kwargs):
-        id=kwargs.get("pk")
-        qs=TaskChart.objects.get(id=id)
-        serializer=TaskChartSerializer(qs)
-        return Response(data=serializer.data)
+    
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            task_chart = TaskChart.objects.prefetch_related('taskupdatechart_set').get(id=kwargs.get("pk"))
+        except TaskChart.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = TaskChartSerializer(task_chart)
+        data = serializer.data
+        task_updates_chart_list = task_chart.taskupdatechart_set.all()
+        task_updates_chart_serializer = TaskUpdatesChartSerializer(task_updates_chart_list, many=True)
+        data['task_updates_chart_list'] = task_updates_chart_serializer.data
+        return Response(data)
     
     
-class TaskUpdatesChartView(ViewSet):
-    authentication_classes=[authentication.TokenAuthentication]
-    permission_classes=[permissions.IsAuthenticated]
+# class TaskUpdatesChartView(ViewSet):
+#     authentication_classes=[authentication.TokenAuthentication]
+#     permission_classes=[permissions.IsAuthenticated]
     
-    def list(self,request,*args,**kwargs):
-        qs=TaskUpdateChart.objects.all()
-        serializer=TaskUpdatesChartSerializer(qs,many=True)
-        return Response(data=serializer.data)
+#     def list(self,request,*args,**kwargs):
+#         qs=TaskUpdateChart.objects.all()
+#         serializer=TaskUpdatesChartSerializer(qs,many=True)
+#         return Response(data=serializer.data)
     
-    def retrieve(self,request,*args,**kwargs):
-        id=kwargs.get("pk")
-        qs=TaskUpdateChart.objects.get(id=id)
-        serializer=TaskUpdatesChartSerializer(qs)
-        return Response(data=serializer.data)
+#     def retrieve(self,request,*args,**kwargs):
+#         id=kwargs.get("pk")
+#         qs=TaskUpdateChart.objects.get(id=id)
+#         serializer=TaskUpdatesChartSerializer(qs)
+#         return Response(data=serializer.data)
     
     
     

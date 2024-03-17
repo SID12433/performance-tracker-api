@@ -26,6 +26,12 @@ class TeamleadSerializer(serializers.ModelSerializer):
         
 
 class TeamsSerializer(serializers.ModelSerializer):
+    teamlead=serializers.CharField(source='teamlead.name', read_only=True)
+    members=serializers.SerializerMethodField()
+
+    def get_members(self, obj):
+        return [member.employee.Firstname for member in obj.members.all()]
+    
     class Meta:
         model=Teams
         fields="__all__"
@@ -38,18 +44,27 @@ class ProjectSerializer(serializers.ModelSerializer):
         
 
 class ProjectAssignSerializer(serializers.ModelSerializer):
+    teamlead=serializers.CharField(source='teamlead.name', read_only=True)
+    project=serializers.CharField(source='project.topic', read_only=True)
+    team=serializers.CharField(source='team.name', read_only=True)
     class Meta:
         model=Project_assign
         fields="__all__"
  
  
 class ProjectDetailSerializer(serializers.ModelSerializer):
+    projectassigned=serializers.CharField(source='projectassigned.topic', read_only=True)
+    teamlead=serializers.CharField(source='teamlead.name', read_only=True)
+    assigned_person=serializers.CharField(source='assigned_person.Firstname', read_only=True)
     class Meta:
         model=ProjectDetail
         fields="__all__"
         
         
 class TaskChartSerializer(serializers.ModelSerializer):
+    project_detail=ProjectDetailSerializer()
+    assigned_person=serializers.CharField(source='assigned_person.Firstname', read_only=True)
+    project_name=serializers.CharField(source='project_detail.projectassigned.project', read_only=True)  #new field for project name
     class Meta:
         model=TaskChart
         fields="__all__"
@@ -58,12 +73,20 @@ class TaskChartSerializer(serializers.ModelSerializer):
 class TaskUpdatesChartSerializer(serializers.ModelSerializer):
     class Meta:
         model=TaskUpdateChart
-        fields="__all__"
+        exclude=('task','updated_by')
     
     
 class PerformanceTrackSerializer(serializers.ModelSerializer):
     hr=serializers.CharField(read_only=True)
     performance=serializers.CharField(read_only=True)
+    class Meta:
+        model=Performance_assign
+        fields="__all__"
+        
+        
+class PerformanceTrackViewSerializer(serializers.ModelSerializer):
+    hr=serializers.CharField(read_only=True)
+    employee=serializers.CharField(source='employee.Firstname', read_only=True)
     class Meta:
         model=Performance_assign
         fields="__all__"

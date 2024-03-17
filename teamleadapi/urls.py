@@ -11,7 +11,7 @@ router.register("projects",views.ProjectView,basename="projects-list")
 router.register("assignedprojects",views.AssignedProjectView,basename="assignedprojects-list")
 router.register("projectdetail",views.ProjectDetailView,basename="projectdetail")
 router.register("taskchart",views.TaskChartView,basename="taskchart")
-router.register("taskupdates",views.TaskUpdatesChartView,basename="taskupdates")
+# router.register("taskupdates",views.TaskUpdatesChartView,basename="taskupdates")
 
 
 

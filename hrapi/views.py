@@ -13,7 +13,7 @@ from rest_framework.authtoken.models import Token
 
 
 from hrapi.models import Hr,Teams,TeamLead,TaskUpdateChart,TaskChart,Employee,Projects,ProjectDetail,Project_assign,Performance_assign
-from hrapi.serializer import RegistrationSerializer,EmployeeSerializer,TeamleadSerializer,TeamsSerializer,ProjectSerializer,ProjectAssignSerializer,ProjectDetailSerializer,TaskChartSerializer,TaskUpdatesChartSerializer,PerformanceTrackSerializer
+from hrapi.serializer import RegistrationSerializer,EmployeeSerializer,TeamleadSerializer,TeamsSerializer,ProjectSerializer,ProjectAssignSerializer,ProjectDetailSerializer,TaskChartSerializer,TaskUpdatesChartSerializer,PerformanceTrackSerializer,PerformanceTrackViewSerializer
 
 
 class HrCreateView(APIView):
@@ -186,27 +186,35 @@ class TaskChartView(ViewSet):
         serializer=TaskChartSerializer(qs,many=True)
         return Response(data=serializer.data)
     
-    def retrieve(self,request,*args,**kwargs):
-        id=kwargs.get("pk")
-        qs=TaskChart.objects.get(id=id)
-        serializer=TaskChartSerializer(qs)
-        return Response(data=serializer.data)
     
     
-class TaskUpdatesChartView(ViewSet):
-    authentication_classes=[authentication.TokenAuthentication]
-    permission_classes=[permissions.IsAuthenticated]
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            task_chart = TaskChart.objects.prefetch_related('taskupdatechart_set').get(id=kwargs.get("pk"))
+        except TaskChart.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = TaskChartSerializer(task_chart)
+        data = serializer.data
+        task_updates_chart_list = task_chart.taskupdatechart_set.all()
+        task_updates_chart_serializer = TaskUpdatesChartSerializer(task_updates_chart_list, many=True)
+        data['task_updates_chart_list'] = task_updates_chart_serializer.data
+        return Response(data)
     
-    def list(self,request,*args,**kwargs):
-        qs=TaskUpdateChart.objects.all()
-        serializer=TaskUpdatesChartSerializer(qs,many=True)
-        return Response(data=serializer.data)
     
-    def retrieve(self,request,*args,**kwargs):
-        id=kwargs.get("pk")
-        qs=TaskUpdateChart.objects.get(id=id)
-        serializer=TaskUpdatesChartSerializer(qs)
-        return Response(data=serializer.data)
+# class TaskUpdatesChartView(ViewSet):
+#     authentication_classes=[authentication.TokenAuthentication]
+#     permission_classes=[permissions.IsAuthenticated]
+    
+#     def list(self,request,*args,**kwargs):
+#         qs=TaskUpdateChart.objects.all()
+#         serializer=TaskUpdatesChartSerializer(qs,many=True)
+#         return Response(data=serializer.data)
+    
+#     def retrieve(self,request,*args,**kwargs):
+#         id=kwargs.get("pk")
+#         qs=TaskUpdateChart.objects.get(id=id)
+#         serializer=TaskUpdatesChartSerializer(qs)
+#         return Response(data=serializer.data)
     
     
 class PerformanceTrackView(APIView):
@@ -253,13 +261,13 @@ class PerformanceTrackView(APIView):
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         
-class PerformancelistView():
+class PerformancelistView(ViewSet):
     authentication_classes=[authentication.TokenAuthentication]
     permission_classes=[permissions.IsAuthenticated]
     
     def list(self,request,*args,**kwargs):
-        qs=TaskUpdateChart.objects.all()
-        serializer=TaskUpdatesChartSerializer(qs,many=True)
+        qs=Performance_assign.objects.all()
+        serializer=PerformanceTrackViewSerializer(qs,many=True)
         return Response(data=serializer.data)
     
     

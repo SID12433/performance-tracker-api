@@ -22,7 +22,7 @@ class TeamleadCreateView(APIView):
             serializer.save(user_type="teamlead")
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
  
 class CustomAuthToken(ObtainAuthToken):
@@ -128,7 +128,7 @@ class ProjectView(ViewSet):
                 serializer.save(project=project_obj,teamlead=teamlead_obj,team=team_obj)
                 return Response(data=serializer.data)
             else:
-                return Response(data=serializer.errors)
+                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data={"message": "Team is not approved by the Hr, so team cannot accept projects."}, status=status.HTTP_404_NOT_FOUND)
     
@@ -160,7 +160,7 @@ class AssignedProjectView(ViewSet):
             serializer.save(teamlead=teamlead_obj,projectassigned=projectassign_obj)
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         
     @action(methods=["post"],detail=True)

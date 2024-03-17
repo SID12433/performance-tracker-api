@@ -23,7 +23,7 @@ class HrCreateView(APIView):
             serializer.save(user_type="hr")
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
 class CustomAuthToken(ObtainAuthToken):
@@ -120,7 +120,7 @@ class ProjectView(ViewSet):
             serializer.save()
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def list(self,request,*args,**kwargs):
         qs=Projects.objects.all()
@@ -250,7 +250,7 @@ class PerformanceTrackView(APIView):
             )
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         
 class PerformancelistView():

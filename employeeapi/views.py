@@ -16,6 +16,7 @@ from rest_framework.authtoken.models import Token
 from hrapi.models import Hr,Teams,TeamLead,TaskUpdateChart,TaskChart,Employee,Projects,ProjectDetail,Project_assign,Performance_assign
 from employeeapi.serializer import RegistrationSerializer,TeamSerializer,ProjectDetailSerializer,ProjectAssignSerializer,TaskChartSerializer,TaskUpdateChartSerializer
 
+
 class EmployeeCreateView(APIView):
     def post(self,request,*args,**kwargs):
         serializer=RegistrationSerializer(data=request.data)
@@ -23,7 +24,7 @@ class EmployeeCreateView(APIView):
             serializer.save(user_type="employee")
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -106,7 +107,7 @@ class ProjectDetailView(ViewSet):
             serializer.save(assigned_person=emp_obj,project_detail=projectdetail_obj,total_days=total_days,end_date=ending_date,)
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
 class TaskChartView(ViewSet):
@@ -134,7 +135,7 @@ class TaskChartView(ViewSet):
             serializer.save(updated_by=emp_obj,task=task_obj)
             return Response(data=serializer.data)
         else:
-            return Response(data=serializer.errors)    
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
 
     
 class TaskUpdatesView(ViewSet):

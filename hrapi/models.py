@@ -88,6 +88,9 @@ class ProjectDetail(models.Model):
     ]
     status=models.CharField(max_length=50,choices=options,default="In progress")
     
+    def __str__(self):
+        return self.projectassigned.project.topic
+    
 
 class TaskChart(models.Model):
     project_detail=models.ForeignKey(ProjectDetail,on_delete=models.CASCADE) 

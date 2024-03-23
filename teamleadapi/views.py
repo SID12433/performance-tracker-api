@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet,ViewSet
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied,NotFound
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -81,6 +82,8 @@ class TeamView(ViewSet):
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    
+    
     def list(self, request, *args, **kwargs):
         teamlead_id = request.user.id
         teamlead_obj = TeamLead.objects.get(id=teamlead_id)
@@ -90,6 +93,8 @@ class TeamView(ViewSet):
             return Response(data={"message": "Team not found for this team lead."}, status=status.HTTP_404_NOT_FOUND)
         serializer = TeamsViewSerializer(team)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+    
+    
     
     def retrieve(self,request,*args,**kwargs):
         id=kwargs.get("pk")
@@ -143,24 +148,43 @@ class AssignedProjectView(ViewSet):
         serializer=ProjectAssignSerializer(qs,many=True)
         return Response(data=serializer.data)
     
-    def retrieve(self,request,*args,**kwargs):
-        id=kwargs.get("pk")
-        qs=Projects.objects.get(id=id)
-        serializer=ProjectSerializer(qs)
-        return Response(data=serializer.data)
+    def retrieve(self, request, *args, **kwargs):
+        assigned_project_id = kwargs.get("pk")
+        
+        try:
+            assigned_project_obj = Project_assign.objects.get(id=assigned_project_id)
+            project_detail = assigned_project_obj.project
+            project_serializer = ProjectSerializer(project_detail)
+            project_assign_serializer = ProjectAssignSerializer(assigned_project_obj)
+            
+            return Response({
+                'project_detail': project_serializer.data,
+                'assigned_project_detail': project_assign_serializer.data
+            })
+        except Project_assign.DoesNotExist:
+            raise NotFound("Assigned project not found")
     
-    @action(methods=["post"],detail=True)
+    
+    @action(methods=["post"], detail=True)
     def assign_to_emp(self, request, *args, **kwargs):
-        serializer=ProjectDetailSerializer(data=request.data)
-        projectassign_id=kwargs.get("pk")
-        projectassign_obj=Project_assign.objects.get(id=projectassign_id)
-        teamlead=request.user.id
-        teamlead_obj=TeamLead.objects.get(id=teamlead)       
+        serializer = ProjectDetailSerializer(data=request.data)
+        projectassign_id = kwargs.get("pk")
+        projectassign_obj = Project_assign.objects.get(id=projectassign_id)
+        teamlead = request.user.id
+        teamlead_obj = TeamLead.objects.get(id=teamlead)
+        if projectassign_obj.teamlead != teamlead_obj:
+            raise PermissionDenied("You are not authorized to assign this project to employees.")
+        assigned_employee_id = request.data.get('assigned_person')
+        assigned_employee = Employee.objects.get(id=assigned_employee_id)
+        team = projectassign_obj.team
+        if assigned_employee not in team.members.all():
+            raise PermissionDenied("You can only assign this project to your team members.")
         if serializer.is_valid():
-            serializer.save(teamlead=teamlead_obj,projectassigned=projectassign_obj)
+            serializer.save(teamlead=teamlead_obj, projectassigned=projectassign_obj)
             return Response(data=serializer.data)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         
         
     @action(methods=["post"],detail=True)

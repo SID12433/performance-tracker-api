@@ -7,6 +7,8 @@ from rest_framework.viewsets import ModelViewSet,ViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from datetime import datetime, timedelta
+from rest_framework.exceptions import PermissionDenied,NotFound
+
 
 
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -65,15 +67,43 @@ class AssignedProjectsView(ViewSet):
             employee = Employee.objects.get(id=request.user.id)
         except Employee.DoesNotExist:
             return Response({"error": "Employee does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        emp_id=request.user.id
         qs = Project_assign.objects.filter(team__members=employee).distinct()
         serializer = ProjectAssignSerializer(qs, many=True)
+        
+        for project_assign_data in serializer.data:
+            project_assign = Project_assign.objects.get(id=project_assign_data['id'])
+            project_details = ProjectDetail.objects.filter(projectassigned=project_assign,assigned_person=emp_id)
+            project_detail_serializer = ProjectDetailSerializer(project_details, many=True)
+            project_detail_data = project_detail_serializer.data
+            
+            project_assign_data['project_details'] = project_detail_data
+        
         return Response(serializer.data)
     
-    def retrieve(self,request,*args,**kwargs):
-        id=kwargs.get("pk")
-        qs=Project_assign.objects.get(id=id)
-        serializer=ProjectAssignSerializer(qs)
-        return Response(data=serializer.data)
+    # def retrieve(self,request,*args,**kwargs):
+    #     id=kwargs.get("pk")
+    #     qs=Project_assign.objects.get(id=id)
+    #     serializer=ProjectAssignSerializer(qs)
+    #     return Response(data=serializer.data)
+    
+
+    def retrieve(self, request, *args, **kwargs):
+        id = kwargs.get("pk")
+        
+        try:
+            project_assign = Project_assign.objects.get(id=id)
+        except Project_assign.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        project_assign_serializer = ProjectAssignSerializer(project_assign)
+        project_assign_data = project_assign_serializer.data
+        project_details = ProjectDetail.objects.filter(projectassigned=project_assign)
+        project_detail_serializer = ProjectDetailSerializer(project_details, many=True)
+        project_detail_data = project_detail_serializer.data
+        project_assign_data['project_details'] = project_detail_data
+        return Response(data=project_assign_data)
+     
+    
     
 class ProjectDetailView(ViewSet):
     authentication_classes=[authentication.TokenAuthentication]
@@ -93,21 +123,38 @@ class ProjectDetailView(ViewSet):
         return Response(data=serializer.data)
     
     
-    @action(methods=["post"],detail=True)
+    @action(methods=["post"], detail=True)
     def taskchart_add(self, request, *args, **kwargs):
-        serializer=TaskChartSerializer(data=request.data)
-        projectdetail_id=kwargs.get("pk")
-        projectdetail_obj=ProjectDetail.objects.get(id=projectdetail_id)
-        emp_id=request.user.id
-        emp_obj=Employee.objects.get(id=emp_id)       
+        serializer = TaskChartSerializer(data=request.data)
+        projectdetail_id = kwargs.get("pk")
+        projectdetail_obj = ProjectDetail.objects.get(id=projectdetail_id)
+        emp_id = request.user.id
+        emp_obj = Employee.objects.get(id=emp_id)       
+        
+        # Check if the employee is assigned to the project detail
+        if projectdetail_obj.assigned_person != emp_obj:
+            raise PermissionDenied("You are not authorized to create task charts for this project detail.")
+        
         if serializer.is_valid():
             start_date = datetime.now().date()
             ending_date = projectdetail_obj.projectassigned.project.end_date
             total_days = (ending_date - start_date).days if ending_date else None
-            serializer.save(assigned_person=emp_obj,project_detail=projectdetail_obj,total_days=total_days,end_date=ending_date,)
+            serializer.save(assigned_person=emp_obj, project_detail=projectdetail_obj, total_days=total_days, end_date=ending_date)
             return Response(data=serializer.data)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+    @action(methods=["post"],detail=True)
+    def part_complete(self, request, *args, **kwargs):
+        projectdetail = kwargs.get("pk")
+        try:
+            projectdetail_obj = ProjectDetail.objects.get(id=projectdetail)
+        except Project_assign.DoesNotExist:
+            return Response({"message": "project not found"}, status=status.HTTP_404_NOT_FOUND)
+        projectdetail_obj.status = "completed"
+        projectdetail_obj.save()
+        return Response({"message": "project part completed marked success"}, status=status.HTTP_200_OK)
         
 
 class TaskChartView(ViewSet):
@@ -122,6 +169,30 @@ class TaskChartView(ViewSet):
         qs = TaskChart.objects.filter(assigned_person=employee)
         serializer = TaskChartSerializer(qs, many=True)
         return Response(serializer.data)
+    
+    
+    # def retrieve(self,request,*args,**kwargs):
+    #     id=kwargs.get("pk")
+    #     emp_id=request.user.id
+    #     qs=TaskChart.objects.get(id=id,assigned_person=emp_id)
+    #     serializer=TaskChartSerializer(qs)
+    #     return Response(data=serializer.data)
+    
+    
+    def retrieve(self, request, *args, **kwargs):
+        id = kwargs.get("pk")
+        emp_id = request.user.id
+        try:
+            task_chart = TaskChart.objects.get(id=id, assigned_person=emp_id)
+        except TaskChart.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        task_chart_serializer = TaskChartSerializer(task_chart)
+        task_chart_data = task_chart_serializer.data
+        task_updates = TaskUpdateChart.objects.filter(task=task_chart)
+        task_updates_serializer = TaskUpdateChartSerializer(task_updates, many=True)
+        task_updates_data = task_updates_serializer.data
+        task_chart_data['task_updates'] = task_updates_data
+        return Response(data=task_chart_data)
     
     
     @action(methods=["post"],detail=True)

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--k)uc+78kl_9lw6qdb3f+@^khdqqrkeu4jzg%6bsq@g=@)d91y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL="hrapi.CustomUser"
 

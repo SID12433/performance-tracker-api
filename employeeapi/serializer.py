@@ -60,6 +60,7 @@ class TaskChartSerializer(serializers.ModelSerializer):
     class Meta:
         model=TaskChart
         fields="__all__"
+
         
 class TaskUpdateChartSerializer(serializers.ModelSerializer):
     task=serializers.CharField(read_only=True)
